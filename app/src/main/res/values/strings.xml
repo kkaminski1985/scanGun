@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">ScanGun</string>
+    <string name="client_id">957389232202-p27r139aojbk5944u3tqlvpgjf8pq2nh.apps.googleusercontent.com</string>
+    <string name="scan_label">Scan</string>
+    <string name="commit_label">Commit</string>
+</resources>

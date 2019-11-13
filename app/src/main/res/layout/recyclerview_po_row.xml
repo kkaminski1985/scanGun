@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/poNum"
+        android:layout_width="200dp"
+        android:layout_height="21dp"
+        android:layout_weight="1"
+        android:gravity="top|start"
+        app:layout_constraintStart_toStartOf="@+id/trckNum"
+        app:layout_constraintTop_toBottomOf="@+id/trckNum" />
+
+    <TextView
+        android:id="@+id/trckNum"
+        android:layout_width="202dp"
+        android:layout_height="22dp"
+        android:layout_marginTop="4dp"
+        android:layout_weight="1"
+        android:adjustViewBounds="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/quant"
+        android:layout_width="202dp"
+        android:layout_height="22dp"
+        android:layout_weight="1"
+        android:gravity="top|start"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/poNum"
+        app:layout_constraintTop_toBottomOf="@+id/poNum"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <TextView
+        android:id="@+id/orid"
+        android:layout_width="144dp"
+        android:layout_height="24dp"
+        android:layout_weight="1"
+        android:gravity="top|start"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/name"
+        android:layout_width="150dp"
+        android:layout_height="21dp"
+        android:layout_marginTop="4dp"
+        android:layout_weight="1"
+        android:gravity="center|start"
+        app:layout_constraintStart_toStartOf="@+id/cdNum"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/cdNum"
+        android:layout_width="147dp"
+        android:layout_height="19dp"
+        android:layout_weight="1"
+        android:gravity="top|start"
+        app:layout_constraintBottom_toTopOf="@+id/orid"
+        app:layout_constraintStart_toStartOf="@+id/orid"
+        app:layout_constraintTop_toBottomOf="@+id/name"
+        app:layout_constraintVertical_bias="0.25" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
