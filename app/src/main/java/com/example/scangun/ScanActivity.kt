@@ -298,7 +298,7 @@ class ScanActivity : AppCompatActivity(), ReadSpreadsheetContract.View/*, LoadSp
                             "Order #: " + foundPo.orid.toString() + "\n" +
                             "PO #: " + foundPo.ponum.toString()
 
-                    //sendMessage(sMsg)         //printer on/off
+                    sendMessage(sMsg)         //printer on/off
                     //    toast("Good Scan" + foundPo.toString()
                     /*val text : TextView = findViewById(R.id.textView)
                     text.text = foundPo.toString()*/
