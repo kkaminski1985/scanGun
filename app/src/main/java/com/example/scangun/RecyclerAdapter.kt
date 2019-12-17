@@ -33,7 +33,10 @@ class RecyclerAdapter(private val pos : ArrayList<PO>) : RecyclerView.Adapter<Re
                 "Order #: " + itemPo.orid.toString() + "\n" +
                 "PO #: " + itemPo.ponum.toString()
         var sndAct :ScanActivity = ScanActivity()
-        holder.itemView.setOnClickListener { async{sndAct.sendMessage(sMsg)}}// printer on/off
+        holder.itemView.setOnClickListener { async{sndAct.sendMessage(sMsg)
+            sndAct.fillPoArray(itemPo)
+        }
+        }// printer on/off
 
 
     }

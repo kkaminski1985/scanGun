@@ -3,4 +3,9 @@
     <string name="client_id">957389232202-p27r139aojbk5944u3tqlvpgjf8pq2nh.apps.googleusercontent.com</string>
     <string name="scan_label">Scan</string>
     <string name="commit_label">Commit</string>
+    <string name="adjust_print_feed">Adjust Print Feed</string>
+    <string name="close_app">Close App</string>
+
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
 </resources>

@@ -1,24 +1,43 @@
 package com.example.scangun
 
 import android.app.Activity
+import android.app.Dialog
 import android.app.ProgressDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.res.TypedArray
 import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Parcelable
 import android.util.Log
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat.startActivityForResult
+import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.scangun.ScanActivity.Companion.REQUEST_ENABLE_BLUETOOTH
+import com.example.scangun.ScanActivity.Companion.m_address
+import com.example.scangun.ScanActivity.Companion.m_bluetoothAdapter
+import com.example.scangun.ScanActivity.Companion.m_bluetoothSocket
+import com.example.scangun.ScanActivity.Companion.m_isConnected
+import com.example.scangun.ScanActivity.Companion.m_myUUID
+import com.example.scangun.ScanActivity.Companion.m_progress
+import com.example.scangun.ScanActivity.Companion.outPo
+import com.example.scangun.ScanActivity.Companion.recPos
+import com.example.scangun.ScanActivity.Companion.scanPo
 import com.example.scangun.ScanActivity.Companion.scanR
+import com.example.scangun.ScanActivity.Companion.trkIdx
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -33,11 +52,14 @@ import com.google.api.services.sheets.v4.model.ValueRange
 import com.google.zxing.integration.android.IntentIntegrator
 import com.google.zxing.integration.android.IntentResult
 import kotlinx.android.synthetic.main.activity_scan.*
+import kotlinx.android.synthetic.main.feed_dialogue.*
 
 import org.jetbrains.anko.toast
 import java.io.IOException
 import java.util.*
 import kotlin.collections.ArrayList
+import androidx.fragment.app.FragmentManager as FragmentManager1
+
 
 class ScanActivity : AppCompatActivity(), ReadSpreadsheetContract.View/*, LoadSpreadsheet*/ {
 
@@ -49,11 +71,13 @@ class ScanActivity : AppCompatActivity(), ReadSpreadsheetContract.View/*, LoadSp
 
     companion object {
         var trkIdx = 2
+        var poAryList = arrayListOf<PO>()
         var m_myUUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
         var m_bluetoothSocket: BluetoothSocket? = null
         lateinit var m_progress: ProgressDialog
         var m_isConnected: Boolean = false
         var m_address: String? = null
+        var feed_val: Int = 125
         private lateinit var comPresenter:  ReadSpreadsheetContract.Presenter
         var recPos: ArrayList<PO> = ArrayList()
         //lateinit var inbPO: MutableList<PO>
@@ -64,9 +88,12 @@ class ScanActivity : AppCompatActivity(), ReadSpreadsheetContract.View/*, LoadSp
         var scanPo: ArrayList<PO> = ArrayList()
         var outPo: ArrayList<PO> = ArrayList()
         val ssId:String = "1B3BOymCMmLdK3mciNhUy5PE_SLhkLRZ91bNLBEErCHQ"
+        const val ADJ_FEED = 3
         //lateinit var parc_pos: Array<Parcelable>
     }
-
+    /*inline fun FragmentManager.inTransaction(func: FragmentTransaction.() -> FragmentTransaction) {
+        beginTransaction().func().commit()
+    }*/
     override fun launchAuthentication(client: GoogleSignInClient) {
         startActivityForResult(client.signInIntent, ReadSpreadsheetActivity.RQ_GOOGLE_SIGN_IN)
 
@@ -95,6 +122,7 @@ class ScanActivity : AppCompatActivity(), ReadSpreadsheetContract.View/*, LoadSp
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_scan)
+        val actionBar = supportActionBar
         outPo = ArrayList()
         //idx = intent.getIntExtra("Idx",2)
         m_bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
@@ -140,6 +168,41 @@ class ScanActivity : AppCompatActivity(), ReadSpreadsheetContract.View/*, LoadSp
         }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        // Inflate the menu to use in the action bar
+        val inflater = menuInflater
+        inflater.inflate(R.menu.action_menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+
+        // Handle presses on the action bar menu items
+        val fDialogView = LayoutInflater.from(this).inflate(R.layout.feed_dialogue,null)
+        val fBuilder = AlertDialog.Builder(this)
+            .setView(fDialogView)
+            .setTitle("Adjust Print Feed")
+
+        when (item.itemId) {
+            R.id.feed -> {
+                    val fAlertDialog=fBuilder.show()
+                fAlertDialog.feedConf.setOnClickListener {
+                    fAlertDialog.dismiss()
+                    feed_val =  fAlertDialog.feed_num.text.toString().toInt()
+                }
+                fAlertDialog.feedCanc.setOnClickListener {
+                    fAlertDialog.dismiss()
+                }
+                return true
+
+            }
+
+
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
 
     override fun onDestroy() {
         super.onDestroy()
@@ -161,14 +224,18 @@ class ScanActivity : AppCompatActivity(), ReadSpreadsheetContract.View/*, LoadSp
             }
         }
     }
+    fun fillPoArray(inp_PO:PO){
+        poAryList.add(inp_PO)
+    }
      fun sendMessage(input: String){
+         var feedVal = feed_val.toByte()
         if(m_bluetoothSocket != null){
-            var initz: ByteArray = byteArrayOf(0x1b.toByte(),0x40.toByte())
-            var pSize:ByteArray = byteArrayOf(0x1d.toByte(),0x21.toByte(),0x01.toByte())
-            var msg: ByteArray = input.toByteArray()
-            var sendPrint: ByteArray = byteArrayOf(0x1b.toByte(),0x4A.toByte(), 0x44.toByte())// byteArrayOf(0x1b.toByte(), 0x64.toByte())
-            var rotate: ByteArray = byteArrayOf(0x1B.toByte(), 0x56.toByte(),0x01.toByte(),0x31.toByte())
-            var unrotate: ByteArray = byteArrayOf(0x1b.toByte(),0x56.toByte(),0x00.toByte(),0x30.toByte())
+            val initz: ByteArray = byteArrayOf(0x1b.toByte(),0x40.toByte())
+            val pSize:ByteArray = byteArrayOf(0x1d.toByte(),0x21.toByte(),0x01.toByte())
+            val msg: ByteArray = input.toByteArray()
+            var sendPrint: ByteArray = byteArrayOf(0x1b.toByte(),0x4A.toByte(),/* 0x7C.toByte()*/feedVal)// byteArrayOf(0x1b.toByte(), 0x64.toByte())
+            val rotate: ByteArray = byteArrayOf(0x1B.toByte(), 0x56.toByte(),0x01.toByte(),0x31.toByte())
+            val unrotate: ByteArray = byteArrayOf(0x1b.toByte(),0x56.toByte(),0x00.toByte(),0x30.toByte())
             rotate.plus(msg.plus(unrotate))
             try{
 
@@ -205,6 +272,7 @@ class ScanActivity : AppCompatActivity(), ReadSpreadsheetContract.View/*, LoadSp
         init {
             this.context = c
         }
+
 
         override fun onPreExecute() {
             super.onPreExecute()
@@ -383,4 +451,26 @@ class ScanActivity : AppCompatActivity(), ReadSpreadsheetContract.View/*, LoadSp
 
 
 //    }
+
+
+}
+/*class PrintFeedDialogFragment : DialogFragment() {
+
+    override fun onCreateDialog(savedInstanceState: Bundle): Dialog {
+        return activity?.let {
+            // Use the Builder class for convenient dialog construction
+            val builder = AlertDialog.Builder(it)
+            builder.setMessage(getString(R.string.adjust_print_feed))
+                .setPositiveButton(getString(R.string.ok),
+                    DialogInterface.OnClickListener { dialog, id ->
+                        // Adjust with num box here
+                    })
+                .setNegativeButton(getString(R.string.cancel),
+                    DialogInterface.OnClickListener { dialog, id ->
+                        //Cancel
+                    })
+            // Create the AlertDialog object and return it
+            builder.create()
+        } ?: throw IllegalStateException("Activity cannot be null")
     }
+}*/
